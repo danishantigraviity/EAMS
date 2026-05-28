@@ -226,8 +226,16 @@ app.use('/api/asset-requests', assetRequestRoutes);
 const publicPath = path.join(__dirname, 'public');
 app.use(express.static(publicPath));
 // Fallback: send index.html for any non-API route (SPA client‑side routing)
-app.get('*', (req, res) => {
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api')) {
+    return next();
+  }
   res.sendFile(path.join(publicPath, 'index.html'));
+});
+
+// 404 Handler for API routes
+app.use('/api', (req, res, next) => {
+  res.status(404).json({ success: false, message: `API route ${req.method} ${req.originalUrl} not found` });
 });
 
 // Error handling middleware (must be last)
