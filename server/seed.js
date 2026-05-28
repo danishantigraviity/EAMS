@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const dns = require('dns');
-dns.setServers(['8.8.8.8', '1.1.1.1']);
+dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
+try { dns.setDefaultResultOrder('ipv4first'); } catch(e) {}
 const dotenv = require('dotenv');
 const path = require('path');
 const bcrypt = require('bcryptjs');
@@ -89,11 +90,13 @@ async function seed() {
         name: 'MacBook Pro 16"',
         serialNumber: 'SN-MAC-2026-987',
         type: 'laptop',
-        status: 'allocated',
+        status: 'assigned',
         vendor: 'Apple Inc.',
         cost: 195000,
         location: 'HQ - Floor 3',
         assignedTo: employee._id,
+        department: depts[1]._id,
+        createdBy: superAdmin._id,
         purchaseDate: new Date('2026-01-15'),
         warrantyExpiry: new Date('2029-01-15'),
         notes: 'M3 Pro, 18GB RAM, 512GB SSD'
@@ -106,6 +109,8 @@ async function seed() {
         vendor: 'Dell',
         cost: 32000,
         location: 'HQ - IT Lab',
+        department: depts[0]._id,
+        createdBy: superAdmin._id,
         purchaseDate: new Date('2026-02-10'),
         warrantyExpiry: new Date('2028-02-10'),
         notes: '4K IPS USB-C monitor'
@@ -114,11 +119,13 @@ async function seed() {
         name: 'Ergonomic Mesh Chair',
         serialNumber: 'SN-CHAIR-ERG-009',
         type: 'chair',
-        status: 'allocated',
+        status: 'assigned',
         vendor: 'Featherlite',
         cost: 12500,
         location: 'HQ - Floor 1',
         assignedTo: employee._id,
+        department: depts[1]._id,
+        createdBy: superAdmin._id,
         purchaseDate: new Date('2025-11-20'),
         warrantyExpiry: new Date('2027-11-20')
       }
@@ -135,11 +142,13 @@ async function seed() {
         licenseKey: 'F3K9P-X7W4Q-M2D8J-L9R5T-V2B6N',
         licenseType: 'subscription',
         totalSeats: 100,
-        seatsAssigned: 1,
+        usedSeats: 1,
         cost: 120000,
+        createdBy: superAdmin._id,
+        department: depts[1]._id,
         purchaseDate: new Date('2026-01-01'),
         expiryDate: new Date('2027-01-01'),
-        assignments: [{ employee: employee._id, assignedAt: new Date() }]
+        assignedTo: [employee._id]
       },
       {
         softwareName: 'Adobe Creative Cloud',
@@ -147,8 +156,10 @@ async function seed() {
         licenseKey: 'ADOBE-CC-2026-KEYS-9871',
         licenseType: 'subscription',
         totalSeats: 10,
-        seatsAssigned: 0,
+        usedSeats: 0,
         cost: 85000,
+        createdBy: superAdmin._id,
+        department: depts[1]._id,
         purchaseDate: new Date('2026-03-01'),
         expiryDate: new Date('2027-03-01')
       }
