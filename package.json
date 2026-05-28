@@ -4,7 +4,7 @@
   "description": "Smart Enterprise Asset Management System",
   "scripts": {
     "install:all": "npm install --prefix server && npm install --prefix client",
-    "build": "npm install --prefix server && npm install --prefix client && npm run build --prefix client",
+    "build": "npm install --prefix server && npm install --prefix client && npm run build --prefix client && node -e \"const{cpSync,mkdirSync}=require('fs');mkdirSync('server/public',{recursive:true});cpSync('client/dist','server/public',{recursive:true});console.log('✅ Copied client/dist -> server/public')\"",
     "start": "node server/server.js",
     "dev:server": "cd server && npm run dev",
     "dev:client": "cd client && npm run dev"
