@@ -225,12 +225,15 @@ app.use('/api/license-types', licenseTypeRoutes);
 app.use('/api/asset-requests', assetRequestRoutes);
 
 
+// Serve uploaded files statically
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Serve React frontend (static assets) for all environments
 const publicPath = path.join(__dirname, 'public');
 app.use(express.static(publicPath));
 // Fallback: send index.html for any non-API route (SPA client‑side routing)
 app.get('*', (req, res, next) => {
-  if (req.path.startsWith('/api')) {
+  if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
     return next();
   }
   res.sendFile(path.join(publicPath, 'index.html'));
