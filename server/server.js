@@ -143,15 +143,33 @@ const allowedOrigins = [
   'http://localhost:3001',
   'http://localhost:3002',
   'http://localhost:5173',
+  'https://eams-1yart.vercel.app', // Vercel production
 ];
+
+// Support comma-separated FRONTEND_URL env var (e.g. for multiple deployments)
 if (process.env.FRONTEND_URL) {
-  allowedOrigins.push(process.env.FRONTEND_URL);
+  process.env.FRONTEND_URL.split(',').forEach(url => {
+    const trimmed = url.trim();
+    if (trimmed && !allowedOrigins.includes(trimmed)) {
+      allowedOrigins.push(trimmed);
+    }
+  });
 }
 
 app.use(cors({
-  origin: allowedOrigins,
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    // Allow any vercel.app subdomain
+    if (origin.endsWith('.vercel.app')) return callback(null, true);
+    // Allow any onrender.com subdomain
+    if (origin.endsWith('.onrender.com')) return callback(null, true);
+    // Check explicit whitelist
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    callback(new Error(`CORS blocked: ${origin}`));
+  },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
@@ -204,20 +222,13 @@ app.use('/api/license-types', licenseTypeRoutes);
 app.use('/api/asset-requests', assetRequestRoutes);
 
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ success: true, message: 'EAMS API is running', timestamp: new Date().toISOString() });
+// Serve React frontend (static assets) for all environments
+const publicPath = path.join(__dirname, 'public');
+app.use(express.static(publicPath));
+// Fallback: send index.html for any non-API route (SPA client‑side routing)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(publicPath, 'index.html'));
 });
-
-// Serve React frontend in production
-if (process.env.NODE_ENV === 'production') {
-  const publicPath = path.join(__dirname, 'public');
-  app.use(express.static(publicPath));
-  // Fallback: send index.html for any non-API route (SPA client-side routing)
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(publicPath, 'index.html'));
-  });
-}
 
 // Error handling middleware (must be last)
 app.use(errorHandler);
