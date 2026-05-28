@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -228,6 +229,11 @@ app.use('/api/asset-requests', assetRequestRoutes);
 // Serve uploaded files statically
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Default Route (Health Check)
+app.get('/', (req, res) => {
+  res.status(200).json({ success: true, message: 'API Running Successfully' });
+});
+
 // Serve React frontend (static assets) for all environments
 const publicPath = path.join(__dirname, 'public');
 app.use(express.static(publicPath));
@@ -236,7 +242,12 @@ app.get('*', (req, res, next) => {
   if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
     return next();
   }
-  res.sendFile(path.join(publicPath, 'index.html'));
+  const indexPath = path.join(publicPath, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).json({ success: false, message: 'Resource not found' });
+  }
 });
 
 // 404 Handler for API routes
