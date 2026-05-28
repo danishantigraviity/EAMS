@@ -40,6 +40,9 @@ const LicenseType = require('./models/LicenseType');
 
 const app = express();
 
+// Trust proxy for express-rate-limit (Render operates behind reverse proxy)
+app.set('trust proxy', 1);
+
 const seedAssetTypes = async () => {
   try {
     const count = await AssetType.countDocuments();
