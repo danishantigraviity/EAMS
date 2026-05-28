@@ -12,6 +12,7 @@ export default function FileUploader({
   preview = true,
   currentUrl,
   className = '',
+  variant = 'default', // 'default' or 'avatar'
 }) {
   const [preview_, setPreview] = useState(null);
   const [error, setError] = useState('');
@@ -50,6 +51,50 @@ export default function FileUploader({
   };
 
   const displayUrl = preview_ || currentUrl;
+
+  if (variant === 'avatar') {
+    return (
+      <div className={`flex flex-col items-center justify-center gap-1 ${className}`}>
+        <motion.div
+          {...getRootProps()}
+          whileHover="hover"
+          className={`relative w-28 h-28 rounded-full border-2 border-dashed transition-all cursor-pointer overflow-hidden flex items-center justify-center group
+            ${isDragActive ? 'border-primary-500 bg-primary-50/50 dark:bg-primary-950/20' : 'border-gray-200 dark:border-dark-500 hover:border-primary-400 hover:bg-gray-50/30 dark:hover:bg-dark-600/10'}
+            ${error ? 'border-red-400 bg-red-50 dark:bg-red-950/10' : ''}
+          `}
+        >
+          <input {...getInputProps()} />
+
+          {displayUrl ? (
+            <div className="relative w-full h-full">
+              <img src={displayUrl} alt="Avatar Preview" className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <span className="text-white text-xs font-semibold">Change Photo</span>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center p-2 text-center">
+              <Upload size={18} className="text-gray-400 dark:text-gray-500 mb-1" />
+              <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">Upload</span>
+            </div>
+          )}
+        </motion.div>
+
+        {displayUrl && (
+          <button
+            type="button"
+            onClick={clear}
+            className="text-xs text-red-500 hover:text-red-600 font-semibold flex items-center gap-1 mt-1 transition-colors"
+          >
+            <X size={12} /> Remove
+          </button>
+        )}
+
+        {hint && !displayUrl && <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">{hint}</p>}
+        {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+      </div>
+    );
+  }
 
   return (
     <div className={className}>

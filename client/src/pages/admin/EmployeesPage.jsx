@@ -152,7 +152,7 @@ export default function EmployeesPage() {
         onPageChange={(p) => setFilters(f => ({ ...f, page: p }))}
       />
 
-      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title={selected ? 'Edit Employee' : 'Add Employee'} size="lg" overflowVisible={true}>
+      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title={selected ? 'Edit Employee' : 'Add Employee'} size="lg">
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -203,7 +203,7 @@ export default function EmployeesPage() {
           </div>
           <div>
             <label className="label">Profile Photo</label>
-            <FileUploader onFileSelect={setImageFile} accept={{ 'image/*': [] }} hint="JPG, PNG up to 2MB" currentUrl={selected?.profileImage} />
+            <FileUploader onFileSelect={setImageFile} accept={{ 'image/*': [] }} hint="JPG, PNG up to 2MB" currentUrl={selected?.profileImage} variant="avatar" />
           </div>
           <div className="flex gap-3 pt-2">
             <Button type="submit" loading={loading} className="flex-1 justify-center">{selected ? 'Update' : 'Create'} Employee</Button>
