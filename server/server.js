@@ -208,7 +208,17 @@ app.use('/api/asset-requests', assetRequestRoutes);
 app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'EAMS API is running', timestamp: new Date().toISOString() });
 });
-// Local uploads configuration active.
+
+// Serve React frontend in production
+if (process.env.NODE_ENV === 'production') {
+  const publicPath = path.join(__dirname, 'public');
+  app.use(express.static(publicPath));
+  // Fallback: send index.html for any non-API route (SPA client-side routing)
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(publicPath, 'index.html'));
+  });
+}
+
 // Error handling middleware (must be last)
 app.use(errorHandler);
 

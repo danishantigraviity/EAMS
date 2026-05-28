@@ -6,3 +6,4 @@ build/
 *.log
 .vite/
 coverage/
+server/public/
