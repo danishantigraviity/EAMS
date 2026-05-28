@@ -31,6 +31,6 @@ const digitalAssetCategorySchema = new mongoose.Schema(
 );
 
 // Indexes
-digitalAssetCategorySchema.index({ code: 1 });
+
 
 module.exports = mongoose.model('DigitalAssetCategory', digitalAssetCategorySchema);

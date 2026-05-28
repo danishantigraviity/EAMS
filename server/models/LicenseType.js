@@ -30,6 +30,6 @@ const licenseTypeSchema = new mongoose.Schema(
   }
 );
 
-licenseTypeSchema.index({ code: 1 });
+
 
 module.exports = mongoose.model('LicenseType', licenseTypeSchema);

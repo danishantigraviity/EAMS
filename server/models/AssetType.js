@@ -37,7 +37,7 @@ const assetTypeSchema = new mongoose.Schema(
 );
 
 // Indexes
-assetTypeSchema.index({ code: 1 });
+
 assetTypeSchema.index({ category: 1 });
 
 module.exports = mongoose.model('AssetType', assetTypeSchema);
