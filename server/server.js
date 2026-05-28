@@ -146,7 +146,7 @@ const allowedOrigins = [
   'http://localhost:3001',
   'http://localhost:3002',
   'http://localhost:5173',
-  'https://eams-1yart.vercel.app', // Vercel production
+  'https://eams-lyart.vercel.app', // Vercel production
 ];
 
 // Support comma-separated FRONTEND_URL env var (e.g. for multiple deployments)
