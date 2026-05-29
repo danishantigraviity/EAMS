@@ -47,7 +47,7 @@ const assetSchema = yup.object({
   vendor: yup.string(),
   purchaseDate: yup.string(),
   warrantyExpiry: yup.string(),
-  cost: yup.number().min(0),
+  cost: yup.number().typeError('Cost must be a number').min(0).nullable().transform((value, originalValue) => originalValue === '' ? null : value),
   notes: yup.string(),
   location: yup.string(),
 });
@@ -65,6 +65,7 @@ export default function AssetsPage() {
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [imageFile, setImageFile] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
   const [filters, setFilters] = useState({ type: '', status: '', search: '', page: 1 });
   
   const employeeOptions = useMemo(() => {
@@ -84,7 +85,7 @@ export default function AssetsPage() {
   const canManage = ['super_admin', 'it_team'].includes(user?.role);
   const canAssign = ['super_admin', 'it_team', 'hr_team'].includes(user?.role);
 
-  const { register, handleSubmit, reset, control, formState: { errors } } = useForm({ resolver: yupResolver(assetSchema) });
+  const { register, handleSubmit, reset, control, setValue, formState: { errors } } = useForm({ resolver: yupResolver(assetSchema) });
 
   const load = useCallback(() => {
     dispatch(fetchAssets({ ...filters }));
@@ -108,23 +109,31 @@ export default function AssetsPage() {
   };
 
   const onSubmit = async (data) => {
-    const fd = new FormData();
-    Object.entries(data).forEach(([k, v]) => { if (v !== undefined && v !== '') fd.append(k, v); });
-    if (imageFile) fd.append('image', imageFile);
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      const fd = new FormData();
+      Object.entries(data).forEach(([k, v]) => { if (v !== undefined && v !== '') fd.append(k, v); });
+      if (imageFile) fd.append('image', imageFile);
 
-    let result;
-    if (selected) {
-      result = await dispatch(updateAsset({ id: selected._id, data: fd }));
-    } else {
-      result = await dispatch(createAsset(fd));
-    }
+      let result;
+      if (selected) {
+        result = await dispatch(updateAsset({ id: selected._id, data: fd }));
+      } else {
+        result = await dispatch(createAsset(fd));
+      }
 
-    if (createAsset.fulfilled.match(result) || updateAsset.fulfilled.match(result)) {
-      toast.success(selected ? 'Asset updated!' : 'Asset created!');
-      setModalOpen(false);
-      dispatch(fetchDashboardStats());
-    } else {
-      toast.error(result.payload || 'Operation failed');
+      if (createAsset.fulfilled.match(result) || updateAsset.fulfilled.match(result)) {
+        toast.success(selected ? 'Asset updated!' : 'Asset created!');
+        setModalOpen(false);
+        dispatch(fetchDashboardStats());
+      } else {
+        toast.error(result.payload || 'Operation failed');
+      }
+    } catch (err) {
+      toast.error('An unexpected error occurred.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -320,13 +329,26 @@ export default function AssetsPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Serial Number *</label>
-                  <div className="relative">
-                    <input 
-                      {...register('serialNumber')} 
-                      className={`w-full pl-10 pr-4 py-2.5 bg-gray-50/40 dark:bg-dark-800/40 border rounded-xl text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm ${errors.serialNumber ? 'border-red-400 focus:ring-red-400/20' : 'border-gray-200/80 dark:border-dark-700'}`} 
-                      placeholder="SN-XXXX-XXXX" 
-                    />
-                    <Tag className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <input 
+                        {...register('serialNumber')} 
+                        className={`w-full pl-10 pr-4 py-2.5 bg-gray-50/40 dark:bg-dark-800/40 border rounded-xl text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm ${errors.serialNumber ? 'border-red-400 focus:ring-red-400/20' : 'border-gray-200/80 dark:border-dark-700'}`} 
+                        placeholder="SN-XXXX-XXXX" 
+                      />
+                      <Tag className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const randomId = Math.random().toString(36).substring(2, 8).toUpperCase();
+                        const timestamp = Date.now().toString().slice(-4);
+                        setValue('serialNumber', `SN-${randomId}-${timestamp}`);
+                      }}
+                      className="px-4 py-2.5 bg-primary-50 hover:bg-primary-100 dark:bg-primary-950/30 dark:hover:bg-primary-900/30 border border-primary-200/60 dark:border-primary-800/60 text-primary-600 dark:text-primary-400 font-semibold rounded-xl text-sm transition-colors flex items-center justify-center flex-shrink-0"
+                    >
+                      Generate
+                    </button>
                   </div>
                   {errors.serialNumber && <p className="text-red-500 text-xs mt-1">{errors.serialNumber.message}</p>}
                 </div>
@@ -454,7 +476,7 @@ export default function AssetsPage() {
             </button>
             <Button
               type="submit"
-              loading={loading}
+              loading={loading || submitting}
               className="px-6 py-2.5 !bg-primary-600 hover:!bg-primary-700 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
             >
               {selected ? 'Update Asset' : 'Create Asset'}

@@ -43,12 +43,29 @@ const assetSlice = createSlice({
       .addCase(fetchAssets.pending, (s) => { s.loading = true; s.error = null; })
       .addCase(fetchAssets.fulfilled, (s, a) => { s.loading = false; s.items = a.payload.data; s.total = a.payload.total; s.page = a.payload.page; s.totalPages = a.payload.totalPages; })
       .addCase(fetchAssets.rejected, (s, a) => { s.loading = false; s.error = a.payload; })
+      
       .addCase(fetchAsset.fulfilled, (s, a) => { s.current = a.payload; })
-      .addCase(createAsset.fulfilled, (s, a) => { s.items.unshift(a.payload); s.total += 1; })
-      .addCase(updateAsset.fulfilled, (s, a) => { const idx = s.items.findIndex(i => i._id === a.payload._id); if (idx !== -1) s.items[idx] = a.payload; if (s.current?._id === a.payload._id) s.current = a.payload; })
-      .addCase(deleteAsset.fulfilled, (s, a) => { s.items = s.items.filter(i => i._id !== a.payload); })
-      .addCase(assignAsset.fulfilled, (s, a) => { const idx = s.items.findIndex(i => i._id === a.payload._id); if (idx !== -1) s.items[idx] = a.payload; if (s.current?._id === a.payload._id) s.current = a.payload; })
-      .addCase(unassignAsset.fulfilled, (s, a) => { const idx = s.items.findIndex(i => i._id === a.payload._id); if (idx !== -1) s.items[idx] = a.payload; if (s.current?._id === a.payload._id) s.current = a.payload; })
+      
+      .addCase(createAsset.pending, (s) => { s.loading = true; s.error = null; })
+      .addCase(createAsset.fulfilled, (s, a) => { s.loading = false; s.items.unshift(a.payload); s.total += 1; })
+      .addCase(createAsset.rejected, (s, a) => { s.loading = false; s.error = a.payload; })
+      
+      .addCase(updateAsset.pending, (s) => { s.loading = true; s.error = null; })
+      .addCase(updateAsset.fulfilled, (s, a) => { s.loading = false; const idx = s.items.findIndex(i => i._id === a.payload._id); if (idx !== -1) s.items[idx] = a.payload; if (s.current?._id === a.payload._id) s.current = a.payload; })
+      .addCase(updateAsset.rejected, (s, a) => { s.loading = false; s.error = a.payload; })
+      
+      .addCase(deleteAsset.pending, (s) => { s.loading = true; s.error = null; })
+      .addCase(deleteAsset.fulfilled, (s, a) => { s.loading = false; s.items = s.items.filter(i => i._id !== a.payload); })
+      .addCase(deleteAsset.rejected, (s, a) => { s.loading = false; s.error = a.payload; })
+      
+      .addCase(assignAsset.pending, (s) => { s.loading = true; s.error = null; })
+      .addCase(assignAsset.fulfilled, (s, a) => { s.loading = false; const idx = s.items.findIndex(i => i._id === a.payload._id); if (idx !== -1) s.items[idx] = a.payload; if (s.current?._id === a.payload._id) s.current = a.payload; })
+      .addCase(assignAsset.rejected, (s, a) => { s.loading = false; s.error = a.payload; })
+      
+      .addCase(unassignAsset.pending, (s) => { s.loading = true; s.error = null; })
+      .addCase(unassignAsset.fulfilled, (s, a) => { s.loading = false; const idx = s.items.findIndex(i => i._id === a.payload._id); if (idx !== -1) s.items[idx] = a.payload; if (s.current?._id === a.payload._id) s.current = a.payload; })
+      .addCase(unassignAsset.rejected, (s, a) => { s.loading = false; s.error = a.payload; })
+      
       .addCase(fetchAssetHistory.fulfilled, (s, a) => { s.history = a.payload; });
   },
 });

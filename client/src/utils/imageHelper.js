@@ -8,6 +8,11 @@
 export const getImageUrl = (url) => {
   if (!url) return null;
 
+  // Force HTTPS for Cloudinary URLs to prevent mixed content issues
+  if (typeof url === 'string' && url.includes('res.cloudinary.com') && url.startsWith('http://')) {
+    url = url.replace('http://', 'https://');
+  }
+
   // Handle base64 encoded images
   if (url.startsWith('data:')) {
     return url;

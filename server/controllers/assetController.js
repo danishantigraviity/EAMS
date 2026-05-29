@@ -66,6 +66,16 @@ exports.getAsset = async (req, res, next) => {
 // POST /api/assets
 exports.createAsset = async (req, res, next) => {
   try {
+    if (req.body.serialNumber) {
+      const existing = await Asset.findOne({ serialNumber: req.body.serialNumber.trim() });
+      if (existing) {
+        return res.status(400).json({ 
+          success: false, 
+          message: `An asset with serial number "${req.body.serialNumber.trim()}" already exists.` 
+        });
+      }
+    }
+
     const assetData = {
       ...req.body,
       createdBy: req.user._id,
@@ -107,6 +117,19 @@ exports.updateAsset = async (req, res, next) => {
     const asset = await Asset.findById(req.params.id);
     if (!asset || asset.isDeleted) {
       return res.status(404).json({ success: false, message: 'Asset not found.' });
+    }
+
+    if (req.body.serialNumber) {
+      const existing = await Asset.findOne({ 
+        serialNumber: req.body.serialNumber.trim(), 
+        _id: { $ne: req.params.id }
+      });
+      if (existing) {
+        return res.status(400).json({ 
+          success: false, 
+          message: `An asset with serial number "${req.body.serialNumber.trim()}" already exists.` 
+        });
+      }
     }
 
     const previousStatus = asset.status;
