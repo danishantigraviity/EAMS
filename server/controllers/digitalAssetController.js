@@ -226,15 +226,20 @@ exports.getDownloadUrl = async (req, res, next) => {
     const asset = await DigitalAsset.findById(req.params.id);
     if (!asset) return res.status(404).json({ success: false, message: 'File not found.' });
 
-    // Generate signed URL (expires in 1 hour)
-    const signedUrl = cloudinary.utils.private_download_url(asset.publicId, asset.fileType.split('/')[1], {
-      expires_at: Math.floor(Date.now() / 1000) + 3600,
-    });
+    let downloadUrl = asset.fileUrl;
+
+    // If it is a Cloudinary hosted asset, use fl_attachment to force download
+    if (downloadUrl && downloadUrl.includes('res.cloudinary.com')) {
+      if (!downloadUrl.includes('fl_attachment')) {
+        // Handle images, videos, and raw uploads by replacing /upload/ with /upload/fl_attachment/
+        downloadUrl = downloadUrl.replace('/upload/', '/upload/fl_attachment/');
+      }
+    }
 
     asset.downloadCount += 1;
     await asset.save();
 
-    res.json({ success: true, data: { downloadUrl: signedUrl || asset.fileUrl } });
+    res.json({ success: true, data: { downloadUrl } });
   } catch (error) { next(error); }
 };
 
