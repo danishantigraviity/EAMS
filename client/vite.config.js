@@ -7,6 +7,9 @@ export default defineConfig({
   resolve: {
     alias: { '@': path.resolve(__dirname, './src') },
   },
+  build: {
+    assetsDir: 'static',
+  },
   server: {
     port: 3000,
     proxy: {
