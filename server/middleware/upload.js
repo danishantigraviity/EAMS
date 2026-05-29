@@ -13,11 +13,11 @@ if (!fs.existsSync(uploadDir)) {
 // Check if valid Cloudinary credentials are provided (i.e. not the default placeholder or empty)
 const useCloudinary = 
   process.env.CLOUDINARY_CLOUD_NAME && 
-  process.env.CLOUDINARY_CLOUD_NAME !== 'your_cloud_name' &&
+  process.env.CLOUDINARY_CLOUD_NAME.trim() !== 'your_cloud_name' &&
   process.env.CLOUDINARY_API_KEY &&
-  process.env.CLOUDINARY_API_KEY !== 'your_api_key' &&
+  process.env.CLOUDINARY_API_KEY.trim() !== 'your_api_key' &&
   process.env.CLOUDINARY_API_SECRET &&
-  process.env.CLOUDINARY_API_SECRET !== 'your_api_secret';
+  process.env.CLOUDINARY_API_SECRET.trim() !== 'your_api_secret';
 
 let cloudinary;
 let storageAssetImage;
@@ -29,9 +29,9 @@ if (useCloudinary) {
   console.log('☁️ Cloudinary credentials detected. Using Cloudinary for storage.');
   
   cloudinarySDK.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME.trim(),
+    api_key: process.env.CLOUDINARY_API_KEY.trim(),
+    api_secret: process.env.CLOUDINARY_API_SECRET.trim(),
   });
 
   cloudinary = cloudinarySDK;
