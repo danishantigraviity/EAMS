@@ -40,7 +40,9 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-accent-50 dark:from-dark-900 dark:via-dark-800 dark:to-dark-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
-          <img src={logo} alt="EAMS Logo" className="inline-flex w-16 h-16 rounded-2xl mb-4 shadow-lg object-cover" />
+          <div className="inline-flex w-40 h-20 bg-white dark:bg-dark-800 border border-gray-100 dark:border-dark-700/60 rounded-2xl items-center justify-center p-3 mb-4 shadow-md overflow-hidden">
+            <img src={logo} alt="EAMS Logo" className="max-w-full max-h-full object-contain object-center" />
+          </div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white font-heading">Welcome Back</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-2">Sign in to your EAMS account</p>
         </motion.div>

@@ -242,7 +242,7 @@ export default function DigitalAssetsPage() {
                 {/* Thumbnail */}
                 <div className="h-28 bg-gray-50 dark:bg-dark-800 rounded-xl flex items-center justify-center mb-3 overflow-hidden border border-gray-100 dark:border-dark-700/50">
                   {f.fileType?.startsWith('image') ? (
-                    <img src={getImageUrl(f.fileUrl)} alt={f.fileName} className="w-full h-full object-cover rounded-xl" />
+                    <img src={getImageUrl(f.fileUrl)} alt={f.fileName} className="w-full h-full object-contain object-center p-2 transition-transform duration-300 group-hover:scale-105" />
                   ) : (
                     <div className="flex flex-col items-center gap-2">
                       {fileIcon(f.fileType, f.originalName)}

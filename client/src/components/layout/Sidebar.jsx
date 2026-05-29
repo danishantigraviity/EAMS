@@ -52,7 +52,13 @@ export default function Sidebar() {
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className={`flex items-center gap-3 px-4 py-5 border-b border-gray-100 dark:border-dark-600 ${!sidebarOpen ? 'justify-center' : ''}`}>
-        <img src={logo} alt="Logo" className="w-9 h-9 rounded-xl flex-shrink-0 object-cover" />
+        <div className="w-10 h-10 flex items-center justify-center overflow-hidden bg-white/10 dark:bg-white/5 border border-gray-200/10 dark:border-dark-600/30 rounded-xl p-1 flex-shrink-0">
+          <img 
+            src={logo} 
+            alt="Logo" 
+            className="max-w-full max-h-full object-contain object-center" 
+          />
+        </div>
         <AnimatePresence>
           {sidebarOpen && (
             <motion.div initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: 'auto' }} exit={{ opacity: 0, width: 0 }}>
