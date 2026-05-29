@@ -10,6 +10,7 @@ import { logoutUser } from '../../features/auth/authSlice';
 import { toggleSidebar, setMobileSidebar } from '../../features/ui/uiSlice';
 import toast from 'react-hot-toast';
 import ProfileImage from '../ui/ProfileImage';
+import logo from '../../assets/logo.png';
 
 const adminLinks = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -51,9 +52,7 @@ export default function Sidebar() {
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className={`flex items-center gap-3 px-4 py-5 border-b border-gray-100 dark:border-dark-600 ${!sidebarOpen ? 'justify-center' : ''}`}>
-        <div className="w-9 h-9 bg-gradient-to-br from-primary-500 to-accent-400 rounded-xl flex items-center justify-center flex-shrink-0">
-          <Cpu size={18} className="text-white" />
-        </div>
+        <img src={logo} alt="Logo" className="w-9 h-9 rounded-xl flex-shrink-0 object-cover" />
         <AnimatePresence>
           {sidebarOpen && (
             <motion.div initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: 'auto' }} exit={{ opacity: 0, width: 0 }}>

@@ -9,6 +9,7 @@ import { Eye, EyeOff, Cpu, Lock, Mail } from 'lucide-react';
 import { loginUser, clearError } from '../../features/auth/authSlice';
 import Button from '../../components/ui/Button';
 import toast from 'react-hot-toast';
+import logo from '../../assets/logo.png';
 
 const schema = yup.object({
   email: yup.string().email('Enter a valid email').required('Email is required'),
@@ -39,9 +40,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-accent-50 dark:from-dark-900 dark:via-dark-800 dark:to-dark-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
-          <div className="inline-flex w-16 h-16 bg-gradient-to-br from-primary-500 to-accent-400 rounded-2xl items-center justify-center mb-4 shadow-lg">
-            <Cpu size={28} className="text-white" />
-          </div>
+          <img src={logo} alt="EAMS Logo" className="inline-flex w-16 h-16 rounded-2xl mb-4 shadow-lg object-cover" />
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white font-heading">Welcome Back</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-2">Sign in to your EAMS account</p>
         </motion.div>
