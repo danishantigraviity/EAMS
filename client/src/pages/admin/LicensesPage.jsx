@@ -4,7 +4,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { motion } from 'framer-motion';
-import { Plus, Shield, UserPlus, UserMinus, Download, Calendar, Clock, ShieldCheck, FileCode, User } from 'lucide-react';
+import { Plus, Shield, UserPlus, UserMinus, Download, Calendar, Clock, ShieldCheck, FileCode, User, Users, CreditCard, ShieldAlert, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
 import * as XLSX from 'xlsx';
 import toast from 'react-hot-toast';
@@ -20,6 +20,7 @@ import { ConfirmDialog, EmptyState } from '../../components/ui/StatCard';
 import SearchableSelect from '../../components/ui/SearchableSelect';
 import LicenseTypeDropdown from '../../components/ui/LicenseTypeDropdown';
 import DatePicker from '../../components/ui/DatePicker';
+
 const schema = yup.object({
   softwareName: yup.string().required('Software name is required'),
   licenseKey: yup.string().required('License key is required'),
@@ -123,15 +124,45 @@ export default function LicensesPage() {
     toast.success('Exported to Excel!');
   };
 
+  const stats = useMemo(() => {
+    let totalSeats = 0;
+    let usedSeats = 0;
+    let totalCost = 0;
+    let expiringSoon = 0;
+    let expired = 0;
+
+    licenses.forEach(l => {
+      totalSeats += l.totalSeats || 0;
+      usedSeats += l.usedSeats || 0;
+      totalCost += (l.cost || 0);
+      
+      const expiry = new Date(l.expiryDate);
+      const now = new Date();
+      const in30Days = new Date(Date.now() + 30 * 86400000);
+      if (expiry < now) {
+        expired++;
+      } else if (expiry < in30Days) {
+        expiringSoon++;
+      }
+    });
+
+    return { totalSeats, usedSeats, totalCost, expiringSoon, expired };
+  }, [licenses]);
+
   const columns = [
     { key: 'softwareName', label: 'Software', sortable: true, render: (val, row) => (
-      <div>
-        <p className="font-semibold text-gray-900 dark:text-white text-sm">{val}</p>
-        <p className="text-xs text-gray-400">{row.vendor}</p>
+      <div className="flex items-center gap-3">
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500/10 to-indigo-500/10 dark:from-primary-500/20 dark:to-indigo-500/20 flex items-center justify-center font-bold text-primary-600 dark:text-primary-400 text-sm border border-primary-500/10 flex-shrink-0">
+          {val?.charAt(0).toUpperCase()}
+        </div>
+        <div>
+          <p className="font-semibold text-gray-900 dark:text-white text-sm leading-snug">{val}</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">{row.vendor}</p>
+        </div>
       </div>
     )},
     { key: 'licenseKey', label: 'License Key', render: (val) => (
-      <span className="font-mono text-xs bg-gray-100 dark:bg-dark-600 px-2 py-0.5 rounded">{val?.length > 20 ? val.slice(0, 20) + '…' : val}</span>
+      <span className="font-mono text-xs bg-gray-50 dark:bg-dark-800 border border-gray-200/50 dark:border-dark-700/60 px-2.5 py-1 rounded-xl text-gray-600 dark:text-gray-400 select-all">{val?.length > 22 ? val.slice(0, 22) + '…' : val}</span>
     )},
     { key: 'expiryDate', label: 'Expiry', sortable: true, render: (val) => (
       <div>
@@ -140,31 +171,41 @@ export default function LicensesPage() {
       </div>
     )},
     { key: 'usedSeats', label: 'Seats', render: (val, row) => (
-      <div className="w-28">
-        <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
-          <span>{val}/{row.totalSeats}</span>
+      <div className="w-32">
+        <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400 mb-1.5 font-medium">
+          <span>{val} / {row.totalSeats} used</span>
           <span>{row.totalSeats > 0 ? Math.round((val / row.totalSeats) * 100) : 0}%</span>
         </div>
-        <div className="h-1.5 bg-gray-200 dark:bg-dark-600 rounded-full overflow-hidden">
+        <div className="h-2 bg-gray-100 dark:bg-dark-800 rounded-full overflow-hidden border border-gray-200/20 dark:border-dark-700/40">
           <div
-            className={`h-full rounded-full transition-all ${val / row.totalSeats > 0.9 ? 'bg-red-500' : val / row.totalSeats > 0.7 ? 'bg-amber-500' : 'bg-green-500'}`}
+            className={`h-full rounded-full transition-all duration-500 bg-gradient-to-r ${
+              val / row.totalSeats > 0.9 
+                ? 'from-red-500 to-rose-400' 
+                : val / row.totalSeats > 0.7 
+                  ? 'from-amber-500 to-orange-400' 
+                  : 'from-emerald-500 to-teal-400'
+            }`}
             style={{ width: `${row.totalSeats > 0 ? (val / row.totalSeats) * 100 : 0}%` }}
           />
         </div>
       </div>
     )},
-    { key: 'cost', label: 'Cost', sortable: true, render: (val) => <span className="text-sm">₹{val?.toLocaleString() ?? 0}</span> },
+    { key: 'cost', label: 'Cost', sortable: true, render: (val) => <span className="text-sm font-semibold text-gray-900 dark:text-white">₹{val?.toLocaleString() ?? 0}</span> },
     { key: '_id', label: 'Actions', align: 'right', render: (_, row) => (
       <div className="flex items-center gap-1 justify-end" onClick={e => e.stopPropagation()}>
         {canAssign && (
-          <button onClick={() => { setSelected(row); setDrawerOpen(true); }} className="p-1.5 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg">
-            <UserPlus size={15} className="text-primary-500" />
+          <button 
+            onClick={() => { setSelected(row); setDrawerOpen(true); }} 
+            className="p-1.5 text-primary-500 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/10 rounded-xl transition-all duration-200"
+            title="Manage Seats"
+          >
+            <UserPlus size={16} />
           </button>
         )}
         {canManage && (
           <>
-            <button onClick={() => openEdit(row)} className="px-2 py-1 text-xs font-medium text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg">Edit</button>
-            <button onClick={() => setDeleteConfirm(row)} className="px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg">Delete</button>
+            <button onClick={() => openEdit(row)} className="px-2.5 py-1 text-xs font-semibold text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/10 rounded-xl transition-all duration-200">Edit</button>
+            <button onClick={() => setDeleteConfirm(row)} className="px-2.5 py-1 text-xs font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl transition-all duration-200">Delete</button>
           </>
         )}
       </div>
@@ -172,32 +213,107 @@ export default function LicensesPage() {
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
+      {/* Header section */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold font-heading text-gray-900 dark:text-white">Licenses <span className="text-gray-400 font-normal text-base">({total})</span></h2>
+          <h2 className="text-2xl font-bold font-heading text-gray-900 dark:text-white">Licenses <span className="text-gray-400 font-normal text-lg">({total})</span></h2>
           <p className="text-sm text-gray-500 dark:text-gray-400">Manage software licenses and seat allocations</p>
         </div>
         <div className="flex gap-2">
           <Button variant="secondary" icon={Download} onClick={exportExcel}>Export</Button>
-          {canManage && <Button icon={Plus} onClick={openAdd}>Add License</Button>}
+          {canManage && (
+            <Button 
+              icon={Plus} 
+              onClick={openAdd}
+              className="bg-gradient-to-r from-primary-600 to-indigo-600 hover:from-primary-700 hover:to-indigo-700 text-white rounded-xl shadow-md transition-all duration-200"
+            >
+              Add License
+            </Button>
+          )}
         </div>
       </div>
 
-      <div className="card p-4 flex flex-wrap gap-3 items-center">
-        <SearchableSelect
-          value={filters.status}
-          onChange={val => setFilters(f => ({ ...f, status: val, page: 1 }))}
-          options={[
-            { value: '', label: 'All Statuses' },
-            { value: 'active', label: 'Active', description: 'License is current and valid' },
-            { value: 'expiring', label: 'Expiring Soon', description: 'License expires within 30 days' },
-            { value: 'expired', label: 'Expired', description: 'License expiration date has passed' }
-          ]}
-          placeholder="All Statuses"
-          className="w-48"
-        />
-        <Button variant="ghost" onClick={() => setFilters({ page: 1, status: '' })}>Clear</Button>
+      {/* Modern 3-Panel Metrics Card Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        {/* Card 1: Investment Spend */}
+        <div className="bg-white/70 dark:bg-dark-800/40 backdrop-blur-xl border border-gray-150/40 dark:border-dark-700/50 p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 flex items-start gap-4">
+          <div className="p-3 bg-gradient-to-br from-primary-500/10 to-indigo-500/10 dark:from-primary-500/20 dark:to-indigo-500/20 rounded-2xl text-primary-600 dark:text-primary-400 border border-primary-500/10">
+            <CreditCard size={22} />
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Total Investment</p>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">₹{stats.totalCost.toLocaleString()}</h3>
+            <p className="text-xs text-gray-500 mt-1.5 flex items-center gap-1 font-medium">
+              <TrendingUp size={12} className="text-emerald-500" />
+              Annual recurring software cost
+            </p>
+          </div>
+        </div>
+
+        {/* Card 2: Seat Utilization */}
+        <div className="bg-white/70 dark:bg-dark-800/40 backdrop-blur-xl border border-gray-150/40 dark:border-dark-700/50 p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 flex items-start gap-4">
+          <div className="p-3 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 dark:from-emerald-500/20 dark:to-teal-500/20 rounded-2xl text-emerald-600 dark:text-emerald-400 border border-emerald-500/10">
+            <Users size={22} />
+          </div>
+          <div className="flex-1">
+            <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Seat Utilization</p>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+              {stats.usedSeats} <span className="text-sm font-normal text-gray-400">/ {stats.totalSeats} seats</span>
+            </h3>
+            <div className="mt-2.5">
+              <div className="h-1.5 bg-gray-100 dark:bg-dark-800 rounded-full overflow-hidden border border-gray-250/10">
+                <div 
+                  className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-500" 
+                  style={{ width: `${stats.totalSeats > 0 ? (stats.usedSeats / stats.totalSeats) * 100 : 0}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 3: License Health */}
+        <div className="bg-white/70 dark:bg-dark-800/40 backdrop-blur-xl border border-gray-150/40 dark:border-dark-700/50 p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 flex items-start gap-4">
+          <div className="p-3 bg-gradient-to-br from-amber-500/10 to-orange-500/10 dark:from-amber-500/20 dark:to-orange-500/20 rounded-2xl text-amber-600 dark:text-amber-400 border border-amber-500/10">
+            <ShieldAlert size={22} />
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">License Health</p>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+              {licenses.length - stats.expired - stats.expiringSoon} <span className="text-sm font-normal text-gray-400">Active</span>
+            </h3>
+            <p className="text-xs text-gray-500 mt-2 font-medium">
+              <span className="text-amber-600 dark:text-amber-400">{stats.expiringSoon} Expiring Soon</span> · <span className="text-red-500">{stats.expired} Expired</span>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Modern Filter Row */}
+      <div className="bg-white/60 dark:bg-dark-800/40 backdrop-blur-xl border border-gray-150/40 dark:border-dark-700/50 p-4 rounded-2xl shadow-sm flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <SearchableSelect
+            value={filters.status}
+            onChange={val => setFilters(f => ({ ...f, status: val, page: 1 }))}
+            options={[
+              { value: '', label: 'All Statuses' },
+              { value: 'active', label: 'Active', description: 'License is current and valid' },
+              { value: 'expiring', label: 'Expiring Soon', description: 'License expires within 30 days' },
+              { value: 'expired', label: 'Expired', description: 'License expiration date has passed' }
+            ]}
+            placeholder="All Statuses"
+            className="w-48"
+          />
+          {filters.status && (
+            <Button 
+              variant="ghost" 
+              onClick={() => setFilters({ page: 1, status: '' })}
+              className="text-xs font-semibold hover:bg-gray-100 dark:hover:bg-dark-700/60 rounded-xl"
+            >
+              Clear Filters
+            </Button>
+          )}
+        </div>
       </div>
 
       <DataTable
@@ -298,13 +414,13 @@ export default function LicensesPage() {
       <Drawer isOpen={drawerOpen} onClose={() => setDrawerOpen(false)} title={`Seats: ${selected?.softwareName}`} width="w-96">
         {selected && (
           <div className="p-4 space-y-5">
-            <div className="card p-4 space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Used Seats</span>
-                <span className="font-bold">{selected.usedSeats} / {selected.totalSeats}</span>
+            <div className="bg-white/60 dark:bg-dark-800/40 backdrop-blur-md border border-gray-150/40 dark:border-dark-700/50 p-4 rounded-2xl shadow-sm space-y-2">
+              <div className="flex justify-between text-sm font-medium text-gray-700 dark:text-gray-300">
+                <span>Used Seats</span>
+                <span className="font-bold text-gray-900 dark:text-white">{selected.usedSeats} / {selected.totalSeats}</span>
               </div>
-              <div className="h-2 bg-gray-200 dark:bg-dark-600 rounded-full overflow-hidden">
-                <div className="h-full bg-primary-500 rounded-full" style={{ width: `${(selected.usedSeats / selected.totalSeats) * 100}%` }} />
+              <div className="h-2 bg-gray-100 dark:bg-dark-800 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-primary-600 to-indigo-600 rounded-full" style={{ width: `${(selected.usedSeats / selected.totalSeats) * 100}%` }} />
               </div>
             </div>
 
@@ -320,7 +436,7 @@ export default function LicensesPage() {
                     searchPlaceholder="Search by name or email..."
                   />
                 </div>
-                <Button icon={UserPlus} onClick={handleAssignSeat} loading={loading} className="w-full justify-center">Assign Seat</Button>
+                <Button icon={UserPlus} onClick={handleAssignSeat} loading={loading} className="w-full justify-center bg-gradient-to-r from-primary-600 to-indigo-600 hover:from-primary-700 hover:to-indigo-700 text-white rounded-xl shadow-md transition-all">Assign Seat</Button>
               </div>
             )}
 
@@ -328,23 +444,23 @@ export default function LicensesPage() {
               <h4 className="label mb-2">Currently Assigned ({selected.assignedTo?.length || 0})</h4>
               <div className="space-y-2">
                 {(selected.assignedTo || []).map(u => (
-                  <div key={u._id} className="flex items-center gap-3 py-2 border-b border-gray-100 dark:border-dark-600 last:border-0">
-                    <div className="w-8 h-8 bg-primary-100 dark:bg-primary-900/30 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-primary-600 text-sm font-bold">{u.name?.charAt(0)}</span>
+                  <div key={u._id} className="flex items-center gap-3 py-3 border-b border-gray-100 dark:border-dark-700/50 last:border-0 hover:bg-gray-50/50 dark:hover:bg-dark-800/30 px-2 rounded-xl transition-all duration-200">
+                    <div className="w-9 h-9 bg-primary-50 dark:bg-primary-950/20 rounded-xl flex items-center justify-center flex-shrink-0 border border-primary-500/10">
+                      <span className="text-primary-600 dark:text-primary-400 text-sm font-bold">{u.name?.charAt(0).toUpperCase()}</span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{u.name}</p>
-                      <p className="text-xs text-gray-400 truncate">{u.email}</p>
+                      <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{u.name}</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{u.email}</p>
                     </div>
                     {canAssign && (
-                      <button onClick={() => handleUnassignSeat(selected._id, u._id)} className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg">
-                        <UserMinus size={14} className="text-red-500" />
+                      <button onClick={() => handleUnassignSeat(selected._id, u._id)} className="p-1.5 hover:bg-red-50 dark:hover:bg-red-950/25 rounded-xl transition-colors" title="Remove Seat">
+                        <UserMinus size={15} className="text-red-500 hover:text-red-600" />
                       </button>
                     )}
                   </div>
                 ))}
                 {(!selected.assignedTo || selected.assignedTo.length === 0) && (
-                  <p className="text-sm text-gray-400 text-center py-4">No seats assigned yet</p>
+                  <p className="text-sm text-gray-400 text-center py-6">No seats assigned yet</p>
                 )}
               </div>
             </div>

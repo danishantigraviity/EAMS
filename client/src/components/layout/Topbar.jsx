@@ -75,17 +75,17 @@ export default function Topbar({ title }) {
       <h1 className="text-lg font-bold text-gray-900 dark:text-white font-heading hidden sm:block truncate">{title}</h1>
 
       {/* Search */}
-      <div ref={searchRef} className="flex-1 max-w-md relative mx-4 hidden md:block">
+      <div ref={searchRef} className="flex-1 max-w-md relative mx-4 hidden md:block group">
         <div className="relative">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 transition-colors" />
           <input
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="Search assets, employees, licenses..."
-            className="input pl-9 pr-4 py-2 text-sm"
+            className="w-full pl-10 pr-9 py-2 bg-gray-50/70 focus:bg-white dark:bg-dark-800/50 border border-gray-200/50 dark:border-dark-600/30 rounded-2xl focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
           />
           {searchQuery && (
-            <button onClick={() => { setSearchQuery(''); setSearchResults(null); }} className="absolute right-3 top-1/2 -translate-y-1/2">
+            <button onClick={() => { setSearchQuery(''); setSearchResults(null); }} className="absolute right-3 top-1/2 -translate-y-1/2 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
               <X size={14} className="text-gray-400" />
             </button>
           )}

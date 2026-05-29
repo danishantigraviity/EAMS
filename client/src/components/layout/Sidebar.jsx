@@ -70,17 +70,21 @@ export default function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+      <nav className="flex-1 p-3 space-y-1.5 overflow-y-auto">
         {links.map((link) => (
           <NavLink
             key={link.to}
             to={link.to}
             onClick={() => dispatch(setMobileSidebar(false))}
             className={({ isActive }) =>
-              `sidebar-item ${isActive ? 'active' : ''} ${!sidebarOpen ? 'justify-center px-3' : ''}`
+              `flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 font-medium text-sm group ${
+                isActive
+                  ? 'bg-primary-50/70 dark:bg-primary-900/15 text-primary-600 dark:text-primary-400 font-semibold shadow-sm border border-primary-500/10'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50/80 dark:hover:bg-dark-700/40 hover:text-gray-900 dark:hover:text-white hover:translate-x-0.5'
+              } ${!sidebarOpen ? 'justify-center px-3 hover:translate-x-0' : ''}`
             }
           >
-            <link.icon size={18} className="flex-shrink-0" />
+            <link.icon size={18} className="flex-shrink-0 group-hover:scale-105 transition-transform duration-200" />
             <AnimatePresence>
               {sidebarOpen && (
                 <motion.span
@@ -123,9 +127,9 @@ export default function Sidebar() {
 
         <button
           onClick={handleLogout}
-          className={`sidebar-item w-full text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 ${!sidebarOpen ? 'justify-center px-3' : ''}`}
+          className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl w-full text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 hover:text-red-600 transition-all duration-200 font-medium text-sm group ${!sidebarOpen ? 'justify-center px-3' : ''}`}
         >
-          <LogOut size={18} className="flex-shrink-0" />
+          <LogOut size={18} className="flex-shrink-0 group-hover:translate-x-0.5 transition-transform duration-200" />
           <AnimatePresence>
             {sidebarOpen && (
               <motion.span
