@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Package } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Package, Loader2 } from 'lucide-react';
 import { getImageUrl } from '../../utils/imageHelper';
 
 /**
@@ -21,18 +21,49 @@ export default function AssetImage({
   iconSize = 20,
   objectFit = 'cover',
 }) {
+  const [retryCount, setRetryCount] = useState(0);
   const [hasError, setHasError] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [currentUrl, setCurrentUrl] = useState('');
+  
+  const timerRef = useRef(null);
   const resolvedUrl = getImageUrl(src);
 
-  // Reset error state if the src changes
   useEffect(() => {
     setHasError(false);
-  }, [src]);
+    setRetryCount(0);
+    setLoading(true);
+    setCurrentUrl(resolvedUrl);
+
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [src, resolvedUrl]);
+
+  const handleImageLoad = () => {
+    setLoading(false);
+  };
+
+  const handleImageError = () => {
+    if (retryCount < 3) {
+      setLoading(true);
+      timerRef.current = setTimeout(() => {
+        setRetryCount(prev => prev + 1);
+        const nextRetry = retryCount + 1;
+        const separator = resolvedUrl.includes('?') ? '&' : '?';
+        setCurrentUrl(`${resolvedUrl}${separator}retry=${nextRetry}`);
+      }, 1500 * (retryCount + 1)); // Backoff: 1.5s, 3s, 4.5s
+    } else {
+      console.warn(`⚠️ Failed to load image after 3 retries: ${resolvedUrl}`);
+      setHasError(true);
+      setLoading(false);
+    }
+  };
 
   if (!resolvedUrl || hasError) {
     return (
-      <div className={fallbackClassName} title="No image available">
-        <Package size={iconSize} className="text-primary-500" />
+      <div className={`${fallbackClassName} border border-gray-100 dark:border-dark-700/60 shadow-sm`} title="No image available">
+        <Package size={iconSize} className="text-primary-500 animate-pulse" />
       </div>
     );
   }
@@ -44,15 +75,18 @@ export default function AssetImage({
   const cleanClassName = className.replace(/object-\w+/g, '');
 
   return (
-    <div className={`relative overflow-hidden flex items-center justify-center bg-gray-50/50 dark:bg-dark-800/50 ${cleanClassName}`}>
+    <div className={`relative overflow-hidden flex items-center justify-center bg-gray-50/50 dark:bg-dark-800/50 border border-gray-150/40 dark:border-dark-700/40 shadow-sm ${cleanClassName}`}>
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-50/60 dark:bg-dark-900/60 z-10">
+          <Loader2 className="w-5 h-5 text-primary-500 animate-spin" />
+        </div>
+      )}
       <img
-        src={resolvedUrl}
+        src={currentUrl}
         alt={alt}
-        className={`w-full h-full ${fitClass} ${customFit}`}
-        onError={() => {
-          console.warn(`⚠️ Failed to load image at: ${resolvedUrl}`);
-          setHasError(true);
-        }}
+        className={`w-full h-full transition-all duration-300 ${loading ? 'blur-sm scale-95' : 'blur-0 scale-100'} ${fitClass} ${customFit}`}
+        onLoad={handleImageLoad}
+        onError={handleImageError}
         loading="lazy"
       />
     </div>

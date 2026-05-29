@@ -193,7 +193,38 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Serve local uploaded files statically
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+const uploadsDir = path.join(__dirname, 'uploads');
+app.use('/uploads', express.static(uploadsDir));
+
+// Fallback middleware for missing upload files to prevent broken image links (e.g. Render ephemeral disk wiping)
+app.use('/uploads', (req, res, next) => {
+  const ext = path.extname(req.path).toLowerCase();
+  const imageExts = ['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg'];
+  if (imageExts.includes(ext)) {
+    res.setHeader('Content-Type', 'image/svg+xml');
+    res.setHeader('Cache-Control', 'public, max-age=60'); // cache fallbacks briefly
+    res.status(200).send(`
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+        <defs>
+          <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#f5f7fa;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#e4e8f0;stop-opacity:1" />
+          </linearGradient>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#grad)" />
+        <g transform="translate(150, 130)">
+          <path d="M50 0 L90 20 L90 70 L50 90 L10 70 L10 20 Z" fill="none" stroke="#6366f1" stroke-width="4" stroke-linejoin="round" />
+          <path d="M50 0 L50 90" fill="none" stroke="#6366f1" stroke-width="2" />
+          <path d="M10 20 L50 40 L90 20" fill="none" stroke="#6366f1" stroke-width="2" />
+        </g>
+        <text x="50%" y="270" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="600" fill="#4f46e5">Asset Preview</text>
+        <text x="50%" y="295" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" fill="#9ca3af">Image unavailable</text>
+      </svg>
+    `.trim());
+  } else {
+    res.status(404).json({ success: false, message: 'File not found' });
+  }
+});
 
 // Sanitization
 app.use(mongoSanitize());
