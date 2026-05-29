@@ -147,7 +147,8 @@ const allowedOrigins = [
   'http://localhost:3001',
   'http://localhost:3002',
   'http://localhost:5173',
-  'https://eams-lyart.vercel.app', // Vercel production
+  'https://eams-1yart.vercel.app', // Vercel production
+  'https://eams-lyart.vercel.app', // Vercel production alias
 ];
 
 // Support comma-separated FRONTEND_URL env var (e.g. for multiple deployments)
@@ -170,7 +171,7 @@ app.use(cors({
     if (origin.endsWith('.onrender.com')) return callback(null, true);
     // Check explicit whitelist
     if (allowedOrigins.includes(origin)) return callback(null, true);
-    callback(new Error(`CORS blocked: ${origin}`));
+    callback(null, false); // Reject CORS cleanly without throwing a 500 error
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
