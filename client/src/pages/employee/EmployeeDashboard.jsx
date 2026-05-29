@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Package, AlertTriangle, CheckCircle, Clock, FileText, Send, RotateCcw } from 'lucide-react';
@@ -14,6 +14,7 @@ import Modal from '../../components/ui/Modal';
 import { Skeleton, EmptyState, StatCard } from '../../components/ui/StatCard';
 import AssetTypeDropdown from '../../components/ui/AssetTypeDropdown';
 import SearchableSelect from '../../components/ui/SearchableSelect';
+import AssetImage from '../../components/ui/AssetImage';
 
 export default function EmployeeDashboard() {
   const { user } = useSelector(s => s.auth);
@@ -33,7 +34,8 @@ export default function EmployeeDashboard() {
   const [activeTab, setActiveTab] = useState('maintenance');
   const [selectedRequest, setSelectedRequest] = useState(null);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
+    if (!user?._id) return;
     setLoading(true);
     try {
       const [assetsRes, reqRes, assetReqRes] = await Promise.all([
@@ -50,37 +52,30 @@ export default function EmployeeDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?._id]);
 
   useEffect(() => {
-    if (user?._id) {
-      loadData();
-    }
-  }, [user]);
+    loadData();
+  }, [loadData]);
 
   // Live WebSocket Updates
   useEffect(() => {
+    if (!user?._id) return;
     websocketService.connect();
 
     const unsubAssets = websocketService.subscribe('assets_update', (payload) => {
       console.log('🔄 Live asset update received:', payload);
-      if (user?._id) {
-        loadData();
-      }
+      loadData();
     });
 
     const unsubRequests = websocketService.subscribe('requests_update', (payload) => {
       console.log('🔄 Live request update received:', payload);
-      if (user?._id) {
-        loadData();
-      }
+      loadData();
     });
 
     const unsubMaintenance = websocketService.subscribe('maintenance_update', (payload) => {
       console.log('🔄 Live maintenance update received:', payload);
-      if (user?._id) {
-        loadData();
-      }
+      loadData();
     });
 
     return () => {
@@ -88,7 +83,7 @@ export default function EmployeeDashboard() {
       unsubRequests();
       unsubMaintenance();
     };
-  }, [user]);
+  }, [user?._id, loadData]);
 
   // Clean form state when modal opens/closes
   useEffect(() => {
@@ -209,13 +204,13 @@ export default function EmployeeDashboard() {
             {myAssets.map(asset => (
               <motion.div key={asset._id} whileHover={{ y: -2 }} className="card p-4 border border-gray-100 dark:border-dark-600">
                 <div className="flex gap-3">
-                  {asset.imageUrl ? (
-                    <img src={asset.imageUrl} alt={asset.name} className="w-12 h-12 rounded-xl object-cover flex-shrink-0" />
-                  ) : (
-                    <div className="w-12 h-12 bg-primary-50 dark:bg-primary-900/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <Package size={20} className="text-primary-500" />
-                    </div>
-                  )}
+                  <AssetImage
+                    src={asset.imageUrl}
+                    alt={asset.name}
+                    className="w-12 h-12 rounded-xl object-cover flex-shrink-0"
+                    fallbackClassName="w-12 h-12 bg-primary-50 dark:bg-primary-900/20 rounded-xl flex items-center justify-center flex-shrink-0"
+                    iconSize={20}
+                  />
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm text-gray-900 dark:text-white truncate">{asset.name}</p>
                     <p className="text-xs text-gray-400 truncate">{asset.serialNumber}</p>

@@ -8,6 +8,7 @@ import { setMobileSidebar } from '../../features/ui/uiSlice';
 import { fetchNotifications, markRead, markAllRead } from '../../features/notifications/notificationSlice';
 import { aiService } from '../../services/aiService';
 import { formatDistanceToNow } from 'date-fns';
+import ProfileImage from '../ui/ProfileImage';
 
 export default function Topbar({ title }) {
   const dispatch = useDispatch();
@@ -209,12 +210,13 @@ export default function Topbar({ title }) {
         </div>
 
         {/* Avatar */}
-        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary-400 to-accent-400 flex items-center justify-center flex-shrink-0 cursor-pointer" onClick={() => navigate('/profile')}>
-          {user?.profileImage ? (
-            <img src={user.profileImage} alt={user.name} className="w-full h-full object-cover rounded-full" />
-          ) : (
-            <span className="text-white text-sm font-bold">{user?.name?.charAt(0)}</span>
-          )}
+        <div className="cursor-pointer flex-shrink-0" onClick={() => navigate('/profile')}>
+          <ProfileImage
+            src={user?.profileImage}
+            name={user?.name}
+            className="w-9 h-9 rounded-full object-cover flex-shrink-0"
+            fallbackClassName="w-9 h-9 bg-gradient-to-br from-primary-400 to-accent-400 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
+          />
         </div>
       </div>
     </header>

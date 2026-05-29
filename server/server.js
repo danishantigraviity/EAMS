@@ -271,10 +271,13 @@ const server = app.listen(PORT, () => {
 const { init: initWebSocket } = require('./utils/websocket');
 initWebSocket(server);
 
-// Handle unhandled promise rejections
+// Handle unhandled promise rejections and uncaught exceptions to ensure server stability
 process.on('unhandledRejection', (err) => {
-  console.error('Unhandled Rejection:', err.message);
-  server.close(() => process.exit(1));
+  console.error('⚠️ Unhandled Rejection:', err.stack || err.message || err);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('⚠️ Uncaught Exception:', err.stack || err.message || err);
 });
 
 module.exports = app;

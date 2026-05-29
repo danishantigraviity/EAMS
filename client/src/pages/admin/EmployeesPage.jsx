@@ -15,6 +15,7 @@ import Badge, { RoleBadge } from '../../components/ui/Badge';
 import { ConfirmDialog } from '../../components/ui/StatCard';
 import FileUploader from '../../components/ui/FileUploader';
 import SearchableSelect from '../../components/ui/SearchableSelect';
+import ProfileImage from '../../components/ui/ProfileImage';
 
 const ROLES = ['super_admin','hr_team','it_team','sbi_team','insurance_team','business_associate','employee'];
 
@@ -81,13 +82,12 @@ export default function EmployeesPage() {
   const columns = [
     { key: 'name', label: 'Employee', sortable: true, render: (val, row) => (
       <div className="flex items-center gap-3">
-        {row.profileImage ? (
-          <img src={row.profileImage} alt={val} className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
-        ) : (
-          <div className="w-9 h-9 bg-gradient-to-br from-primary-400 to-accent-400 rounded-full flex items-center justify-center flex-shrink-0">
-            <span className="text-white text-sm font-bold">{val?.charAt(0)}</span>
-          </div>
-        )}
+        <ProfileImage
+          src={row.profileImage}
+          name={val}
+          className="w-9 h-9 rounded-full object-cover flex-shrink-0"
+          fallbackClassName="w-9 h-9 bg-gradient-to-br from-primary-400 to-accent-400 rounded-full flex items-center justify-center flex-shrink-0 text-white text-sm font-bold"
+        />
         <div>
           <p className="font-semibold text-gray-900 dark:text-white text-sm">{val}</p>
           <p className="text-xs text-gray-400 flex items-center gap-1"><Mail size={10} />{row.email}</p>

@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { assetService } from '../../services/assetService';
 import Button from '../../components/ui/Button';
 import { AssetStatusBadge } from '../../components/ui/Badge';
+import AssetImage from '../../components/ui/AssetImage';
 
 export default function QRScannerPage() {
   const navigate = useNavigate();
@@ -139,13 +140,13 @@ export default function QRScannerPage() {
       {scannedAsset && (
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card p-6">
           <div className="flex gap-4">
-            {scannedAsset.imageUrl ? (
-              <img src={scannedAsset.imageUrl} alt={scannedAsset.name} className="w-20 h-20 rounded-xl object-cover flex-shrink-0" />
-            ) : (
-              <div className="w-20 h-20 bg-primary-50 dark:bg-primary-900/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                <Package size={32} className="text-primary-500" />
-              </div>
-            )}
+            <AssetImage
+              src={scannedAsset.imageUrl}
+              alt={scannedAsset.name}
+              className="w-20 h-20 rounded-xl object-cover flex-shrink-0"
+              fallbackClassName="w-20 h-20 bg-primary-50 dark:bg-primary-900/20 rounded-xl flex items-center justify-center flex-shrink-0"
+              iconSize={32}
+            />
             <div className="flex-1">
               <h3 className="font-bold text-gray-900 dark:text-white font-heading">{scannedAsset.name}</h3>
               <p className="text-sm text-gray-500 mt-0.5">{scannedAsset.type} · {scannedAsset.serialNumber}</p>

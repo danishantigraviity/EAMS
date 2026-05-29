@@ -22,6 +22,8 @@ import FileUploader from '../../components/ui/FileUploader';
 import AssetTypeDropdown from '../../components/ui/AssetTypeDropdown';
 import SearchableSelect from '../../components/ui/SearchableSelect';
 import DatePicker from '../../components/ui/DatePicker';
+import AssetImage from '../../components/ui/AssetImage';
+import ProfileImage from '../../components/ui/ProfileImage';
 
 const ASSET_STATUSES = ['available','assigned','damaged','maintenance','retired'];
 
@@ -163,13 +165,13 @@ export default function AssetsPage() {
   const columns = [
     { key: 'name', label: 'Asset', sortable: true, render: (val, row) => (
       <div className="flex items-center gap-3">
-        {row.imageUrl ? (
-          <img src={row.imageUrl} alt={val} className="w-9 h-9 rounded-lg object-cover flex-shrink-0" />
-        ) : (
-          <div className="w-9 h-9 bg-primary-50 dark:bg-primary-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
-            <Package size={16} className="text-primary-500" />
-          </div>
-        )}
+        <AssetImage
+          src={row.imageUrl}
+          alt={val}
+          className="w-9 h-9 rounded-lg object-cover flex-shrink-0"
+          fallbackClassName="w-9 h-9 bg-primary-50 dark:bg-primary-900/20 rounded-lg flex items-center justify-center flex-shrink-0"
+          iconSize={16}
+        />
         <div>
           <p className="font-semibold text-gray-900 dark:text-white text-sm">{val}</p>
           <p className="text-xs text-gray-400">{row.serialNumber}</p>
@@ -180,7 +182,12 @@ export default function AssetsPage() {
     { key: 'status', label: 'Status', render: (val) => <AssetStatusBadge status={val} /> },
     { key: 'assignedTo', label: 'Assigned To', render: (val) => val ? (
       <div className="flex items-center gap-2">
-        {val.profileImage ? <img src={val.profileImage} alt={val.name} className="w-6 h-6 rounded-full object-cover" /> : <div className="w-6 h-6 bg-gray-200 dark:bg-dark-500 rounded-full" />}
+        <ProfileImage
+          src={val.profileImage}
+          name={val.name}
+          className="w-6 h-6 rounded-full object-cover"
+          fallbackClassName="w-6 h-6 bg-primary-100 dark:bg-primary-950/30 text-primary-650 dark:text-primary-400 flex items-center justify-center font-bold text-xs rounded-full flex-shrink-0"
+        />
         <span className="text-sm">{val.name}</span>
       </div>
     ) : <span className="text-gray-400 text-sm">—</span> },

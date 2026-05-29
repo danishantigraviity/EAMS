@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 // Layout
 import AppLayout from './components/layout/AppLayout';
 import Button from './components/ui/Button';
+import ProfileImage from './components/ui/ProfileImage';
 
 // Auth pages
 import LoginPage from './pages/auth/LoginPage';
@@ -87,13 +88,12 @@ function ProfilePage() {
       <h2 className="text-xl font-bold font-heading text-gray-900 dark:text-white">My Profile</h2>
       <div className="card p-6 space-y-5">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 bg-gradient-to-br from-primary-400 to-accent-400 rounded-2xl flex items-center justify-center flex-shrink-0">
-            {user?.profileImage ? (
-              <img src={user.profileImage} alt={user.name} className="w-full h-full object-cover rounded-2xl" />
-            ) : (
-              <span className="text-white text-2xl font-bold">{user?.name?.charAt(0)}</span>
-            )}
-          </div>
+          <ProfileImage
+            src={user?.profileImage}
+            name={user?.name}
+            className="w-16 h-16 rounded-2xl object-cover flex-shrink-0"
+            fallbackClassName="w-16 h-16 bg-gradient-to-br from-primary-400 to-accent-400 rounded-2xl flex items-center justify-center text-white text-2xl font-bold flex-shrink-0"
+          />
           <div>
             <h3 className="font-bold text-gray-900 dark:text-white font-heading">{user?.name}</h3>
             <p className="text-sm text-gray-500">{user?.email}</p>

@@ -42,10 +42,22 @@ const init = (server) => {
     wss.clients.forEach((ws) => {
       if (ws.isAlive === false) {
         console.log('🔌 Terminating unresponsive WebSocket client');
-        return ws.terminate();
+        try {
+          return ws.terminate();
+        } catch (err) {
+          console.error('❌ Failed to terminate client socket:', err.message);
+          return;
+        }
       }
-      ws.isAlive = false;
-      ws.ping();
+      try {
+        ws.isAlive = false;
+        ws.ping();
+      } catch (err) {
+        console.error('❌ Failed to ping client socket, terminating:', err.message);
+        try {
+          ws.terminate();
+        } catch (termErr) {}
+      }
     });
   }, 30000);
 
@@ -67,8 +79,12 @@ const broadcast = (event, payload = {}) => {
 
   wss.clients.forEach((client) => {
     if (client.readyState === WebSocket.OPEN) {
-      client.send(message);
-      clientCount++;
+      try {
+        client.send(message);
+        clientCount++;
+      } catch (err) {
+        console.error(`❌ Failed to send WebSocket message to client:`, err.message);
+      }
     }
   });
 

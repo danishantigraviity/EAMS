@@ -121,6 +121,12 @@ class WebSocketService {
         this.listeners.delete(event);
       }
     }
+    
+    // Automatically disconnect if there are no listeners remaining
+    if (this.listeners.size === 0) {
+      console.log('🔌 No active WebSocket subscriptions remaining. Disconnecting socket.');
+      this.disconnect();
+    }
   }
 
   send(event, payload = {}) {

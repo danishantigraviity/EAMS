@@ -9,6 +9,7 @@ import {
 import { logoutUser } from '../../features/auth/authSlice';
 import { toggleSidebar, setMobileSidebar } from '../../features/ui/uiSlice';
 import toast from 'react-hot-toast';
+import ProfileImage from '../ui/ProfileImage';
 
 const adminLinks = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -94,13 +95,12 @@ export default function Sidebar() {
       {/* User & Logout */}
       <div className="p-3 border-t border-gray-100 dark:border-dark-600 space-y-1">
         <div className={`flex items-center gap-3 px-3 py-2 ${!sidebarOpen ? 'justify-center' : ''}`}>
-          {user?.profileImage ? (
-            <img src={user.profileImage} alt={user.name} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
-          ) : (
-            <div className="w-8 h-8 bg-gradient-to-br from-primary-400 to-accent-400 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-white text-xs font-bold">{user?.name?.charAt(0)}</span>
-            </div>
-          )}
+          <ProfileImage
+            src={user?.profileImage}
+            name={user?.name}
+            className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+            fallbackClassName="w-8 h-8 bg-gradient-to-br from-primary-400 to-accent-400 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+          />
           <AnimatePresence>
             {sidebarOpen && (
               <motion.div

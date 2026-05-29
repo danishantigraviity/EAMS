@@ -12,6 +12,7 @@ import { digitalAssetService } from '../../services/digitalAssetService';
 import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
 import Badge from '../../components/ui/Badge';
+import { getImageUrl } from '../../utils/imageHelper';
 import { ConfirmDialog, EmptyState } from '../../components/ui/StatCard';
 import FileUploader from '../../components/ui/FileUploader';
 import DigitalAssetCategoryDropdown from '../../components/ui/DigitalAssetCategoryDropdown';
@@ -241,7 +242,7 @@ export default function DigitalAssetsPage() {
                 {/* Thumbnail */}
                 <div className="h-28 bg-gray-50 dark:bg-dark-800 rounded-xl flex items-center justify-center mb-3 overflow-hidden border border-gray-100 dark:border-dark-700/50">
                   {f.fileType?.startsWith('image') ? (
-                    <img src={f.fileUrl} alt={f.fileName} className="w-full h-full object-cover rounded-xl" />
+                    <img src={getImageUrl(f.fileUrl)} alt={f.fileName} className="w-full h-full object-cover rounded-xl" />
                   ) : (
                     <div className="flex flex-col items-center gap-2">
                       {fileIcon(f.fileType, f.originalName)}
@@ -497,7 +498,7 @@ export default function DigitalAssetsPage() {
                           <div className="p-4 font-mono text-xs overflow-x-auto flex-1 bg-dark-950">
                             {zipFileIsImage ? (
                               <div className="flex items-center justify-center py-6 h-full">
-                                <img src={zipFilePreviewUrl} alt="Zip Preview" className="max-h-72 rounded-xl object-contain border border-dark-800" />
+                                <img src={getImageUrl(zipFilePreviewUrl)} alt="Zip Preview" className="max-h-72 rounded-xl object-contain border border-dark-800" />
                               </div>
                             ) : (
                               <pre className="whitespace-pre scrollbar-thin leading-relaxed">
@@ -525,7 +526,7 @@ export default function DigitalAssetsPage() {
               // Standard File Preview
               <div className="space-y-4">
                 {previewModal.fileType?.startsWith('image') ? (
-                  <img src={previewModal.fileUrl} alt={previewModal.originalName} className="w-full rounded-2xl max-h-80 object-contain bg-gray-50 dark:bg-dark-800 border border-gray-100 dark:border-dark-700/50" />
+                  <img src={getImageUrl(previewModal.fileUrl)} alt={previewModal.originalName} className="w-full rounded-2xl max-h-80 object-contain bg-gray-50 dark:bg-dark-800 border border-gray-100 dark:border-dark-700/50" />
                 ) : previewModal.fileType?.includes('pdf') ? (
                   <iframe src={previewModal.fileUrl} className="w-full h-80 rounded-2xl border border-gray-200 dark:border-dark-600" title="PDF Preview" />
                 ) : (

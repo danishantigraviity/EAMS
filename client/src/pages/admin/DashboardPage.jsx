@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -89,62 +89,8 @@ export default function DashboardPage() {
   const [issueDesc, setIssueDesc] = useState('');
   const [submittingIssue, setSubmittingIssue] = useState(false);
 
-  // Initial dashboard load
-  useEffect(() => { dispatch(fetchDashboardStats()); }, [dispatch]);
-
-  // Live WebSocket Updates
-  useEffect(() => {
-    websocketService.connect();
-
-    const unsubAssets = websocketService.subscribe('assets_update', (payload) => {
-      console.log('🔄 Live asset update received:', payload);
-      dispatch(fetchDashboardStats());
-      if (activeActionTab === 'report-issue') {
-        fetchAssets();
-      }
-      if (activeActionTab === 'reports') {
-        fetchReportsData();
-      }
-    });
-
-    const unsubRequests = websocketService.subscribe('requests_update', (payload) => {
-      console.log('🔄 Live request update received:', payload);
-      dispatch(fetchDashboardStats());
-      if (activeActionTab === 'requests') {
-        fetchAllRequests();
-      }
-    });
-
-    const unsubMaintenance = websocketService.subscribe('maintenance_update', (payload) => {
-      console.log('🔄 Live maintenance update received:', payload);
-      dispatch(fetchDashboardStats());
-      if (activeActionTab === 'reports') {
-        fetchReportsData();
-      }
-    });
-
-    return () => {
-      unsubAssets();
-      unsubRequests();
-      unsubMaintenance();
-    };
-  }, [dispatch, activeActionTab]);
-
-  // Conditional Data Fetcher based on Active Tab
-  useEffect(() => {
-    if (activeActionTab === 'requests') {
-      fetchAllRequests();
-    } else if (activeActionTab === 'reports') {
-      if (!reportsData.assetReport) fetchReportsData();
-    } else if (activeActionTab === 'request-asset') {
-      if (employees.length === 0) fetchEmployees();
-    } else if (activeActionTab === 'report-issue') {
-      if (assets.length === 0) fetchAssets();
-    }
-  }, [activeActionTab]);
-
   // Request Fetches
-  const fetchAllRequests = async () => {
+  const fetchAllRequests = useCallback(async () => {
     setRequestsLoading(true);
     try {
       const { data } = await assetRequestService.getAll({ limit: 10 });
@@ -155,9 +101,9 @@ export default function DashboardPage() {
     } finally {
       setRequestsLoading(false);
     }
-  };
+  }, []);
 
-  const fetchReportsData = async () => {
+  const fetchReportsData = useCallback(async () => {
     setReportsLoading(true);
     try {
       const [a, m, l] = await Promise.all([
@@ -175,9 +121,9 @@ export default function DashboardPage() {
     } finally {
       setReportsLoading(false);
     }
-  };
+  }, []);
 
-  const fetchEmployees = async () => {
+  const fetchEmployees = useCallback(async () => {
     setEmployeesLoading(true);
     try {
       const { data } = await employeeService.getAll({ limit: 100 });
@@ -187,9 +133,9 @@ export default function DashboardPage() {
     } finally {
       setEmployeesLoading(false);
     }
-  };
+  }, []);
 
-  const fetchAssets = async () => {
+  const fetchAssets = useCallback(async () => {
     setAssetsLoading(true);
     try {
       const { data } = await assetService.getAll({ limit: 100 });
@@ -199,7 +145,70 @@ export default function DashboardPage() {
     } finally {
       setAssetsLoading(false);
     }
-  };
+  }, []);
+
+  // Initial dashboard load
+  useEffect(() => { dispatch(fetchDashboardStats()); }, [dispatch]);
+
+  // Track activeActionTab in a ref to keep WebSocket subscriptions stable
+  const activeTabRef = useRef(activeActionTab);
+  useEffect(() => {
+    activeTabRef.current = activeActionTab;
+  }, [activeActionTab]);
+
+  // Live WebSocket Updates
+  useEffect(() => {
+    websocketService.connect();
+
+    const unsubAssets = websocketService.subscribe('assets_update', (payload) => {
+      console.log('🔄 Live asset update received:', payload);
+      dispatch(fetchDashboardStats());
+      const currentTab = activeTabRef.current;
+      if (currentTab === 'report-issue') {
+        fetchAssets();
+      }
+      if (currentTab === 'reports') {
+        fetchReportsData();
+      }
+    });
+
+    const unsubRequests = websocketService.subscribe('requests_update', (payload) => {
+      console.log('🔄 Live request update received:', payload);
+      dispatch(fetchDashboardStats());
+      const currentTab = activeTabRef.current;
+      if (currentTab === 'requests') {
+        fetchAllRequests();
+      }
+    });
+
+    const unsubMaintenance = websocketService.subscribe('maintenance_update', (payload) => {
+      console.log('🔄 Live maintenance update received:', payload);
+      dispatch(fetchDashboardStats());
+      const currentTab = activeTabRef.current;
+      if (currentTab === 'reports') {
+        fetchReportsData();
+      }
+    });
+
+    return () => {
+      unsubAssets();
+      unsubRequests();
+      unsubMaintenance();
+    };
+  }, [dispatch, fetchAssets, fetchReportsData, fetchAllRequests]);
+
+  // Conditional Data Fetcher based on Active Tab
+  useEffect(() => {
+    if (activeActionTab === 'requests') {
+      fetchAllRequests();
+    } else if (activeActionTab === 'reports') {
+      if (!reportsData.assetReport) fetchReportsData();
+    } else if (activeActionTab === 'request-asset') {
+      if (employees.length === 0) fetchEmployees();
+    } else if (activeActionTab === 'report-issue') {
+      if (assets.length === 0) fetchAssets();
+    }
+  }, [activeActionTab, fetchAllRequests, fetchReportsData, fetchEmployees, fetchAssets, reportsData.assetReport, employees.length, assets.length]);
 
   const submitRequestReview = async (id) => {
     setRequestsLoading(true);

@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload, X, FileText, Image as ImageIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { getImageUrl } from '../../utils/imageHelper';
 
 export default function FileUploader({
   onFileSelect,
@@ -50,7 +51,7 @@ export default function FileUploader({
     onFileSelect(null);
   };
 
-  const displayUrl = preview_ || currentUrl;
+  const displayUrl = preview_ || getImageUrl(currentUrl);
 
   if (variant === 'avatar') {
     return (
@@ -127,7 +128,7 @@ export default function FileUploader({
           </div>
         ) : currentUrl && !preview_ ? (
           <div className="relative group">
-            <img src={currentUrl} alt="Current" className="w-full h-40 object-cover rounded-xl opacity-70" />
+            <img src={getImageUrl(currentUrl)} alt="Current" className="w-full h-40 object-cover rounded-xl opacity-70" />
             <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/20 group-hover:bg-black/35 transition-colors">
               <p className="text-white text-sm font-semibold tracking-wide">Click or Drag to replace</p>
             </div>
