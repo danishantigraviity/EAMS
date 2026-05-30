@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -66,7 +67,27 @@ export default function AssetsPage() {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const location = useLocation();
   const [filters, setFilters] = useState({ type: '', status: '', search: '', page: 1 });
+  const [localSearch, setLocalSearch] = useState('');
+
+  // Sync from URL search params on mount/location change
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const searchParam = params.get('search') || '';
+    setLocalSearch(searchParam);
+    setFilters(f => ({ ...f, search: searchParam, page: 1 }));
+  }, [location.search]);
+
+  // Debounce local search text typing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (localSearch !== filters.search) {
+        setFilters(f => ({ ...f, search: localSearch, page: 1 }));
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [localSearch, filters.search]);
   
   const employeeOptions = useMemo(() => {
     return employees
@@ -251,8 +272,8 @@ export default function AssetsPage() {
         <div className="relative flex-1 min-w-48">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
-            value={filters.search}
-            onChange={e => setFilters(f => ({ ...f, search: e.target.value, page: 1 }))}
+            value={localSearch}
+            onChange={e => setLocalSearch(e.target.value)}
             placeholder="Search assets..."
             className="input pl-9 py-2 text-sm"
           />
@@ -270,7 +291,7 @@ export default function AssetsPage() {
           placeholder="All Statuses"
           className="w-48"
         />
-        <Button variant="ghost" onClick={() => setFilters({ type: '', status: '', search: '', page: 1 })}>Clear</Button>
+        <Button variant="ghost" onClick={() => { setFilters({ type: '', status: '', search: '', page: 1 }); setLocalSearch(''); }}>Clear</Button>
       </div>
 
       {/* Table */}

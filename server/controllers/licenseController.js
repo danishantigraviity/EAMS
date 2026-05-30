@@ -8,7 +8,13 @@ exports.getLicenses = async (req, res, next) => {
   try {
     const { page = 1, limit = 20, search, status } = req.query;
     const filter = {};
-    if (search) filter.$text = { $search: search };
+    if (search) {
+      const searchRegex = { $regex: search, $options: 'i' };
+      filter.$or = [
+        { softwareName: searchRegex },
+        { vendor: searchRegex }
+      ];
+    }
 
     const now = new Date();
     const thirtyDaysFromNow = new Date();

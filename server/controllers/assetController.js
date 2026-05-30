@@ -18,7 +18,15 @@ exports.getAssets = async (req, res, next) => {
     if (status) filter.status = status;
     if (department) filter.department = department;
     if (assignedTo) filter.assignedTo = assignedTo;
-    if (search) filter.$text = { $search: search };
+    if (search) {
+      const searchRegex = { $regex: search, $options: 'i' };
+      filter.$or = [
+        { name: searchRegex },
+        { serialNumber: searchRegex },
+        { vendor: searchRegex },
+        { type: searchRegex }
+      ];
+    }
 
     const skip = (Number(page) - 1) * Number(limit);
     const [assets, total] = await Promise.all([

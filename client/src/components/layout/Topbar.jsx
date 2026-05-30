@@ -18,11 +18,26 @@ export default function Topbar({ title }) {
   const { user } = useSelector(s => s.auth);
 
   const [notifOpen, setNotifOpen] = useState(false);
+  const [localQuery, setLocalQuery] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState(null);
   const [searching, setSearching] = useState(false);
+  const [placeholder, setPlaceholder] = useState('Search assets, employees, licenses...');
   const searchRef = useRef(null);
   const notifRef = useRef(null);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 640) {
+        setPlaceholder('Search...');
+      } else {
+        setPlaceholder('Search assets, employees, licenses...');
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     dispatch(fetchNotifications());
@@ -39,20 +54,30 @@ export default function Topbar({ title }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Debounce the localQuery update to avoid typing lag
   useEffect(() => {
-    const timer = setTimeout(async () => {
+    const timer = setTimeout(() => {
+      setSearchQuery(localQuery);
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [localQuery]);
+
+  useEffect(() => {
+    const fetchResults = async () => {
       if (searchQuery.length >= 2) {
         setSearching(true);
         try {
           const { data } = await aiService.search(searchQuery);
           setSearchResults(data.data);
-        } catch {}
+        } catch {
+          setSearchResults(null);
+        }
         setSearching(false);
       } else {
         setSearchResults(null);
       }
-    }, 350);
-    return () => clearTimeout(timer);
+    };
+    fetchResults();
   }, [searchQuery]);
 
   const handleNotifClick = (notif) => {
@@ -75,17 +100,17 @@ export default function Topbar({ title }) {
       <h1 className="text-lg font-bold text-gray-900 dark:text-white font-heading hidden sm:block truncate">{title}</h1>
 
       {/* Search */}
-      <div ref={searchRef} className="flex-1 max-w-md relative mx-4 hidden md:block group">
+      <div ref={searchRef} className="flex-1 max-w-[180px] sm:max-w-sm md:max-w-md relative mx-2 sm:mx-4 group">
         <div className="relative">
           <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 transition-colors" />
           <input
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Search assets, employees, licenses..."
+            value={localQuery}
+            onChange={e => setLocalQuery(e.target.value)}
+            placeholder={placeholder}
             className="w-full pl-10 pr-9 py-2 bg-gray-50/70 focus:bg-white dark:bg-dark-800/50 border border-gray-200/50 dark:border-dark-600/30 rounded-2xl focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
           />
-          {searchQuery && (
-            <button onClick={() => { setSearchQuery(''); setSearchResults(null); }} className="absolute right-3 top-1/2 -translate-y-1/2 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+          {localQuery && (
+            <button onClick={() => { setLocalQuery(''); setSearchQuery(''); setSearchResults(null); }} className="absolute right-3 top-1/2 -translate-y-1/2 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
               <X size={14} className="text-gray-400" />
             </button>
           )}
@@ -97,7 +122,7 @@ export default function Topbar({ title }) {
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 4 }}
-              className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-dark-700 rounded-xl shadow-2xl border border-gray-100 dark:border-dark-600 overflow-hidden z-50"
+              className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-dark-700 rounded-xl shadow-2xl border border-gray-100 dark:border-dark-600 overflow-hidden z-50 w-[280px] sm:w-full"
             >
               {searching ? (
                 <div className="p-4 text-sm text-gray-500 text-center">Searching...</div>
@@ -109,7 +134,7 @@ export default function Topbar({ title }) {
                     <div>
                       <div className="px-3 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-dark-800">Assets</div>
                       {searchResults.assets.map(a => (
-                        <button key={a._id} onClick={() => { navigate('/assets'); setSearchResults(null); setSearchQuery(''); }} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-dark-600 text-left">
+                        <button key={a._id} onClick={() => { navigate(`/assets?search=${encodeURIComponent(a.name)}`); setSearchResults(null); setSearchQuery(''); setLocalQuery(''); }} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-dark-600 text-left">
                           <Package size={14} className="text-primary-500 flex-shrink-0" />
                           <div><p className="text-sm font-medium text-gray-800 dark:text-gray-200">{a.name}</p><p className="text-xs text-gray-400">{a.type} · {a.serialNumber}</p></div>
                         </button>
@@ -120,7 +145,7 @@ export default function Topbar({ title }) {
                     <div>
                       <div className="px-3 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-dark-800">Employees</div>
                       {searchResults.employees.map(e => (
-                        <button key={e._id} onClick={() => { navigate('/employees'); setSearchResults(null); setSearchQuery(''); }} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-dark-600 text-left">
+                        <button key={e._id} onClick={() => { navigate(`/employees?search=${encodeURIComponent(e.name)}`); setSearchResults(null); setSearchQuery(''); setLocalQuery(''); }} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-dark-600 text-left">
                           <Users size={14} className="text-accent-500 flex-shrink-0" />
                           <div><p className="text-sm font-medium text-gray-800 dark:text-gray-200">{e.name}</p><p className="text-xs text-gray-400">{e.email}</p></div>
                         </button>
@@ -131,7 +156,7 @@ export default function Topbar({ title }) {
                     <div>
                       <div className="px-3 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-dark-800">Licenses</div>
                       {searchResults.licenses.map(l => (
-                        <button key={l._id} onClick={() => { navigate('/licenses'); setSearchResults(null); setSearchQuery(''); }} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-dark-600 text-left">
+                        <button key={l._id} onClick={() => { navigate(`/licenses?search=${encodeURIComponent(l.softwareName)}`); setSearchResults(null); setSearchQuery(''); setLocalQuery(''); }} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-dark-600 text-left">
                           <Shield size={14} className="text-blue-500 flex-shrink-0" />
                           <div><p className="text-sm font-medium text-gray-800 dark:text-gray-200">{l.softwareName}</p><p className="text-xs text-gray-400">{l.vendor}</p></div>
                         </button>

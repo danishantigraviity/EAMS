@@ -1,10 +1,11 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { motion } from 'framer-motion';
-import { Plus, Shield, UserPlus, UserMinus, Download, Calendar, Clock, ShieldCheck, FileCode, User, Users, CreditCard, ShieldAlert, TrendingUp } from 'lucide-react';
+import { Plus, Shield, UserPlus, UserMinus, Download, Calendar, Clock, ShieldCheck, FileCode, User, Users, CreditCard, ShieldAlert, TrendingUp, Search } from 'lucide-react';
 import { format } from 'date-fns';
 import * as XLSX from 'xlsx';
 import toast from 'react-hot-toast';
@@ -44,7 +45,27 @@ export default function LicensesPage() {
   const [selected, setSelected] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [assignUserId, setAssignUserId] = useState('');
-  const [filters, setFilters] = useState({ page: 1, status: '' });
+  const location = useLocation();
+  const [filters, setFilters] = useState({ page: 1, status: '', search: '' });
+  const [localSearch, setLocalSearch] = useState('');
+
+  // Sync from URL search params on mount/location change
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const searchParam = params.get('search') || '';
+    setLocalSearch(searchParam);
+    setFilters(f => ({ ...f, search: searchParam, page: 1 }));
+  }, [location.search]);
+
+  // Debounce local search text typing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (localSearch !== filters.search) {
+        setFilters(f => ({ ...f, search: localSearch, page: 1 }));
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [localSearch, filters.search]);
 
   const canManage = ['super_admin', 'it_team'].includes(user?.role);
   const canAssign = ['super_admin', 'it_team', 'hr_team'].includes(user?.role);
@@ -290,30 +311,37 @@ export default function LicensesPage() {
       </div>
 
       {/* Modern Filter Row */}
-      <div className="bg-white/60 dark:bg-dark-800/40 backdrop-blur-xl border border-gray-150/40 dark:border-dark-700/50 p-4 rounded-2xl shadow-sm flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <SearchableSelect
-            value={filters.status}
-            onChange={val => setFilters(f => ({ ...f, status: val, page: 1 }))}
-            options={[
-              { value: '', label: 'All Statuses' },
-              { value: 'active', label: 'Active', description: 'License is current and valid' },
-              { value: 'expiring', label: 'Expiring Soon', description: 'License expires within 30 days' },
-              { value: 'expired', label: 'Expired', description: 'License expiration date has passed' }
-            ]}
-            placeholder="All Statuses"
-            className="w-48"
+      <div className="bg-white/60 dark:bg-dark-800/40 backdrop-blur-xl border border-gray-150/40 dark:border-dark-700/50 p-4 rounded-2xl shadow-sm flex flex-wrap gap-3">
+        <div className="relative flex-1 min-w-48">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            value={localSearch}
+            onChange={e => setLocalSearch(e.target.value)}
+            placeholder="Search licenses..."
+            className="input pl-9 py-2 text-sm"
           />
-          {filters.status && (
-            <Button 
-              variant="ghost" 
-              onClick={() => setFilters({ page: 1, status: '' })}
-              className="text-xs font-semibold hover:bg-gray-100 dark:hover:bg-dark-700/60 rounded-xl"
-            >
-              Clear Filters
-            </Button>
-          )}
         </div>
+        <SearchableSelect
+          value={filters.status}
+          onChange={val => setFilters(f => ({ ...f, status: val, page: 1 }))}
+          options={[
+            { value: '', label: 'All Statuses' },
+            { value: 'active', label: 'Active', description: 'License is current and valid' },
+            { value: 'expiring', label: 'Expiring Soon', description: 'License expires within 30 days' },
+            { value: 'expired', label: 'Expired', description: 'License expiration date has passed' }
+          ]}
+          placeholder="All Statuses"
+          className="w-48"
+        />
+        {(filters.status || localSearch) && (
+          <Button 
+            variant="ghost" 
+            onClick={() => { setFilters({ page: 1, status: '', search: '' }); setLocalSearch(''); }}
+            className="text-xs font-semibold hover:bg-gray-100 dark:hover:bg-dark-700/60 rounded-xl"
+          >
+            Clear Filters
+          </Button>
+        )}
       </div>
 
       <DataTable
